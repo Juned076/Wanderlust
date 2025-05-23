@@ -1,67 +1,28 @@
-const express = require("express");
+
+const express = require('express');
 const router = express.Router();
-const wrapAsync = require("../utils/wrapAsync.js");
-const Listing = require("../models/listing.js");
-const {isLoggedIn, isOwner, validateListing} = require("../middleware.js")
+const wrapAsync = require('../utils/wrapAsync.js');
+const review = require('../models/review.js');
+const {isLoggedIn , isowner ,listingValidator} = require('../middleware.js');
+const listing = require('../models/listing.js');
+const listingController = require('../controller/listing.js');
+const multer  = require('multer')
+const {storage} = require('../cloud-config.js');
+const { route } = require('./review.js');
+const upload = multer({ storage })
 
+// INDEX ROUTE // NEW POST ROUTE
+router.route('/').get(wrapAsync(listingController.index))
+.post(isLoggedIn,upload.single('listing[image]'),listingValidator,wrapAsync(listingController.new));
 
-const listingController = require("../controller/listing.js");
-const multer = require("multer");
-const {storage} = require("../cloud-config.js");
-const upload = multer({ storage });
+//   NEW POST REDIRECT ROUTE
+router.route('/new').get(isLoggedIn,wrapAsync(listingController.renderNewForm));
 
-router
-.route("/")
-.get( wrapAsync(listingController.index))
-.post(
-      isLoggedIn,
-      upload.single("listing[image]"),
-      validateListing,
-     wrapAsync (listingController.createListing));
-
-
-//NEW ROUTE
-router.get("/new", isLoggedIn, listingController.renderNewForm);
-
-
-
-router.route("/:id")
-.get(wrapAsync (listingController.showListing))
-.put(isLoggedIn, isOwner,  upload.single("listing[image]"), validateListing, wrapAsync (listingController.updateListing))
-.delete(isLoggedIn, isOwner, wrapAsync (listingController.destroyListing));
-
-
-
-
-
-// SHOW ROUTE
-
-
-
-
-
-//CREATE ROUTE
-
-
-
-//EDIT ROUTE
-
-router.get("/:id/edit", isLoggedIn, isOwner, wrapAsync(listingController.renderEditForm));
-
-
-
-
-//UPDATE ROUTE
-
-
-
-
-
-
-// DELETE ROUTE
-
-
-
-
+// SHOW ROUTE // UPDATE ROUTE //DELETE ROUTE 
+router.route('/:id').get(isLoggedIn,wrapAsync(listingController.show))
+.put(isLoggedIn,isowner,upload.single('listing[image]'),listingValidator,wrapAsync(listingController.update))
+.delete(isLoggedIn,isowner,wrapAsync(listingController.delete));
+//EDIT ROUTE 
+router.get('/:id/edit',isLoggedIn,isowner,wrapAsync(listingController.edit));
 
 module.exports = router;
